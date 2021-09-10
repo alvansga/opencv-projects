@@ -5,6 +5,10 @@ import mediapipe as mp
 import time
 import autopy
 
+import threading
+
+from WebcamVideoStream import WebcamVideoStream
+
 ##################
 wCam,hCam = 640,480
 
@@ -17,20 +21,28 @@ cap.set(4,hCam)
 
 mpHands = mp.solutions.hands
 hands = mpHands.Hands(static_image_mode=False,
-					  max_num_hands=2,
+					  max_num_hands=1,
 					  min_detection_confidence=0.5,
 					  min_tracking_confidence=0.5)
 mpDraw = mp.solutions.drawing_utils
 
 pTime = 0
 cTime = 0
+success, img = cap.read()
+
+def readFrame():
+	global success, img, cap
+	while True:
+		success, img = cap.read()
+
+threading.Thread(target = readFrame, args = ()).start()
 
 while True:
-	success, img = cap.read()
+	#success, img = cap.read()
 	
-	imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+	#imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-	results = hands.process(imgRGB)
+	results = hands.process(img)#RGB)
 
 	if results.multi_hand_landmarks:
 		for handLms in results.multi_hand_landmarks:
@@ -46,9 +58,9 @@ while True:
 	pTime = cTime
 	
 	# cv2.putText(img, f'FPS:{int(fps)}', (20,70), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0),2)
-	cv2.putText(img,str(int(fps)), (10,70), cv2.FONT_HERSHEY_SIMPLEX, 3, (255,0,255),3)
+	# cv2.putText(img,str(int(fps)), (10,70), cv2.FONT_HERSHEY_SIMPLEX, 3, (255,0,255),3)
 	
-	cv2.imshow("Image",img)
+	cv2.imshow("Frame",img)
 	
 	cv2.waitKey(1)
 
