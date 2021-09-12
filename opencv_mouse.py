@@ -4,6 +4,7 @@ import numpy as np
 import mediapipe as mp
 import time
 import autopy
+from math import sqrt
 
 import threading
 
@@ -40,6 +41,8 @@ success, img = cap.read()
 
 wScr, hScr = autopy.screen.size()
 
+def distEuclidean(x0,y0,x1,y1):
+	return sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 -y0))
 
 def readFrame():
 	global success, img, cap
@@ -48,11 +51,15 @@ def readFrame():
 
 threading.Thread(target = readFrame, args = ()).start()
 
+xmouse,ymouse = None,  None
+xindex,yindex = 0,0
+xbase,ybase = 0,0
+
 while True:
 	#success, img = cap.read()
 	
 	#imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-	xmouse,ymouse = None,  None
+	
 	results = hands.process(img)#RGB)
 	
 	cv2.rectangle(img, (margin + adjHor,margin + adjVer), (wCam - margin + adjHor, hCam - margin + adjVer), (0xff,0xee,0), 1)
@@ -61,20 +68,25 @@ while True:
 			for id, lm in enumerate(handLms.landmark):
 				h,w,c = img.shape
 				cx,cy = int(lm.x *w), int(lm.y*h)
-				if id == 8 or id == 12: #telunjuk dan jari tengah
+				if id == 8 or id == 12 or id == 1: #telunjuk dan jari tengah
 					if id == 8 :
+						print("telunjuk	(",cx,",",cy,")")
 						#xmouse,ymouse = cx, cy
-						xmouse = np.interp(cx,(margin + adjHor,wCam - margin + adjHor),(0,wScr))
-						ymouse = np.interp(cy,(margin + adjVer,hCam - margin + adjVer),(0,hScr))
-						
+						xindex,yindex = cx,cy
 						# > menghaluskan pergerakan mouse
 						#clocX = plocX + (xmouse - plocX) / smoothening
 						#clocY = plocY + (ymouse - plocY) / smoothening
+					
+					if id == 1: # dasar telapak
+						print("base		(",cx,",",cy,")")
+						xbase,ybase = cx,cy
 						
+					print(distEuclidean(xindex,yindex,xbase,ybase))
+					
 					cv2.circle(img, (cx,cy), 3, (0,0,255), cv2.FILLED)
 				else:
-					pass
-					#cv2.circle(img, (cx,cy), 3, (0xff,0xee,0), cv2.FILLED)
+					#pass
+					cv2.circle(img, (cx,cy), 3, (0xff,0xee,0), cv2.FILLED)
 
 			#mpDraw.draw_landmarks(img, handLms, mpHands.HAND_CONNECTIONS)
 	
@@ -84,6 +96,9 @@ while True:
 	
 	# cv2.putText(img, f'FPS:{int(fps)}', (20,70), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0),2)
 	#cv2.putText(img,str(int(fps)), (10,30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,255),1)
+	xmouse = np.interp(xindex,(margin + adjHor,wCam - margin + adjHor),(0,wScr))
+	ymouse = np.interp(yindex,(margin + adjVer,hCam - margin + adjVer),(0,hScr))
+						
 	if xmouse != None and ymouse != None:
 		print("(",xmouse,",",ymouse,")")
 		if (wScr-xmouse) > 0 and ymouse > 0 and (wScr-xmouse) < wScr and ymouse < hScr:
