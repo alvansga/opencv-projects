@@ -10,8 +10,8 @@ import threading
 from WebcamVideoStream import WebcamVideoStream
 
 ##################
-wCam,hCam = 640,480
-
+#wCam,hCam = 640,480
+wCam,hCam = 320,240
 ##################
 
 cap = cv2.VideoCapture(0)
@@ -49,18 +49,21 @@ while True:
 			for id, lm in enumerate(handLms.landmark):
 				h,w,c = img.shape
 				cx,cy = int(lm.x *w), int(lm.y*h)
-				cv2.circle(img, (cx,cy), 3, (255,0,255), cv2.FILLED)
+				if id == 8 or id == 12: #telunjuk dan jari tengah
+					cv2.circle(img, (cx,cy), 3, (0,0,255), cv2.FILLED)
+				else:
+					cv2.circle(img, (cx,cy), 3, (0xff,0xee,0), cv2.FILLED)
 
-			mpDraw.draw_landmarks(img, handLms, mpHands.HAND_CONNECTIONS)
+			#mpDraw.draw_landmarks(img, handLms, mpHands.HAND_CONNECTIONS)
 	
 	cTime = time.time()
 	fps = 1 / (cTime - pTime)
 	pTime = cTime
 	
 	# cv2.putText(img, f'FPS:{int(fps)}', (20,70), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0),2)
-	# cv2.putText(img,str(int(fps)), (10,70), cv2.FONT_HERSHEY_SIMPLEX, 3, (255,0,255),3)
+	cv2.putText(img,str(int(fps)), (10,30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,255),1)
 	
-	cv2.imshow("Frame",img)
+	cv2.imshow("Image",img)
 	
 	cv2.waitKey(1)
 
